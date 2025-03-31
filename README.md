@@ -3,7 +3,7 @@ The data and codes available here accompany the paper: Hwang et al. 202X.
 
 Key words: Baynesian network, Causal analysis, Hop plant, Host resistance, XXX.
 
-powdery_mildew_fungicide_record_database_XXX.csv
+Variable description
 
 Pruning: Thoroughness of spring pruning; 1 to 5 ordinal scale
 
