@@ -1,0 +1,49 @@
+library(bnlearn)
+library(gplots)
+library(ggplot2)
+library(ggpubr)
+library(stargazer)
+library(corrplot)
+
+pred <- read.csv(".../Pred_github_nonR6_v1.csv", check.names=FALSE)
+
+pred$Mildew_incidence <- pred$Mildew_incidence*pred$Mildew_incidence 
+pred$Mildew_may <- pred$Mildew_may*pred$Mildew_may 
+pred$Annual_costs <- pred$Annual_costs*pred$Annual_costs
+pred$Interval <- pred$Interval*pred$Interval
+pred$First_spray_date <- pred$First_spray_date*pred$First_spray_date
+
+pred$Pruning <- as.factor(pred$Pruning)
+pred$Susceptibility_to_nonR6_Strains <- as.factor(pred$Susceptibility_to_nonR6_Strains)
+str(pred)
+
+# Susceptibility_to_nonR6_Strains
+
+# Figure 3.  Median distribution for pruing Susceptibility to (non)R6 Strains
+
+ggdensity(pred, "Interval", color = "Susceptibility_to_nonR6_Strains") +
+  stat_central_tendency(aes(color = Susceptibility_to_nonR6_Strains), type = "median", linetype = 2)
+ggsave('MedianDist_S_Interval_nonR6.jpg', dpi = 1000, height = 6, width = 8, unit = 'in')
+
+ggdensity(pred, "First_spray_date", color = "Susceptibility_to_nonR6_Strains") +
+  stat_central_tendency(aes(color = Susceptibility_to_nonR6_Strains), type = "median", linetype = 2)
+ggsave('MedianDist_S_First_spray_date_nonR6.jpg', dpi = 1000, height = 6, width = 8, unit = 'in')
+
+ggdensity(pred, "Annual_costs", color = "Susceptibility_to_nonR6_Strains") +
+  stat_central_tendency(aes(color = Susceptibility_to_nonR6_Strains), type = "median", linetype = 2)
+ggsave('MedianDist_S_Annual_costs_nonR6.jpg', dpi = 1000, height = 6, width = 8, unit = 'in')
+
+
+# Supplemental Figure 1. Median distribution for pruing
+
+ggdensity(pred, "Interval", color = "Pruning") +
+  stat_central_tendency(aes(color = Pruning), type = "median", linetype = 2)
+ggsave('MedianDist_Interval_nonR6.jpg', dpi = 1000, height = 6, width = 8, unit = 'in')
+
+ggdensity(pred, "First_spray_date", color = "Pruning") +
+  stat_central_tendency(aes(color = Pruning), type = "median", linetype = 2)
+ggsave('MedianDist_First_spray_date_nonR6.jpg', dpi = 1000, height = 6, width = 8, unit = 'in')
+
+ggdensity(pred, "Annual_costs", color = "Pruning") +
+  stat_central_tendency(aes(color = Pruning), type = "median", linetype = 2)
+ggsave('MedianDist_Annual_costs_nonR6.jpg', dpi = 1000, height = 6, width = 8, unit = 'in')
