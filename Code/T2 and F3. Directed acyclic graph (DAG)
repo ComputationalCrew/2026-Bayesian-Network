@@ -94,7 +94,8 @@ nrow(str.diff[with(str.diff, strength > 0.85 & direction > 0.50), ])
 
 min(str.diff[with(str.diff, strength > 0.50 & direction > 0.50), "direction"])
 
-
+# Table 2. Edge strength of the conditional Gaussian Bayesian networks from structure learning
+# Figure 3. Directed acyclic graph (DAG)
 png("R6_averaged_1.png",width=15,height=15,units="cm" , res = 1000)
 strength.plot(avg.diff, str.diff, shape = "ellipse", highlight = list(arcs = wl),
               threshold = 0.85, debug = TRUE)
