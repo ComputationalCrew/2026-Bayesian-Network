@@ -1,4 +1,4 @@
-# 2026-Bayesian-Network
+# 2026 Bayesian network project
 The data and codes available here accompany the paper: Hwang et al. 202X. 
 
 Key words: Baynesian network, Causal analysis, Hop plant, Host resistance, XXX.
