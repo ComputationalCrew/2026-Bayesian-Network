@@ -6,13 +6,219 @@ library(stargazer)
 library(corrplot)
 
 
+# Susceptibility to R6 Strains
+
+bn <- read.csv(".../powdery_mildew_fungicide_record_database_Variety_github_R6_v1.csv", check.names=FALSE)
+
+bn$Pruning <- as.numeric(bn$Pruning)
+bn$Susceptibility_to_R6_Strains <- as.numeric(bn$Susceptibility_to_R6_Strains)
+bn$First_spray_date <- as.numeric(bn$First_spray_date)
+bn$Interval <- as.numeric(bn$Interval)
+bn$Initial_interval_after_change <- as.numeric(bn$Initial_interval_after_change)
+bn$Synthetic <- as.numeric(bn$Synthetic)
+bn$Nonsynthetic <- as.numeric(bn$Nonsynthetic)
+bn$Mixture <- as.numeric(bn$Mixture)
+
+bn$Pruning <- sqrt(bn$Pruning)
+bn$Area_R6 <- sqrt(bn$Area_R6)
+bn$First_spray_date <- sqrt(bn$First_spray_date)
+bn$Interval <- sqrt(bn$Interval)
+bn$Annual_costs <- sqrt(bn$Annual_costs)
+bn$Mildew_may <- sqrt(bn$Mildew_may)
+bn$Disease_incidence <- sqrt(bn$Disease_incidence)
+bn$Degree_centrality <- sqrt(bn$Degree_centrality)
+bn$Initial_interval_after_change <- sqrt(bn$Initial_interval_after_change)
+bn$Susceptibility_to_R6_Strains <- sqrt(bn$Susceptibility_to_R6_Strains)
+
+str(bn)
+
+# blacklists and whitelists
+bl = tiers2blacklist(list("Pruning", "Susceptibility_to_R6_Strains", "Area_R6", 
+                          c("Mildew_may", "First_spray_date", "Interval", "Initial_interval_after_change",
+                            "Degree_centrality", "Synthetic", 
+                            "Nonsynthetic", "Mixture",  
+                            "Disease_incidence","Annual_costs")))
+
+bl = rbind(bl, c("Annual_costs", "Mildew_may"), c("Annual_costs", "First_spray_date"),
+           c("Annual_costs", "Interval"), c("Annual_costs", "Initial_interval_after_change"),
+           c("Annual_costs", "Disease_incidence"), c("Annual_costs", "Degree_centrality"),
+           c("Annual_costs", "Synthetic"), c("Annual_costs", "Nonsynthetic"),
+           c("Annual_costs", "Mixture"),
+           c("Disease_incidence", "Mildew_may"), c("Disease_incidence", "First_spray_date"),
+           c("Disease_incidence", "Interval"), c("Disease_incidence", "Initial_interval_after_change"),
+           c("Disease_incidence", "Degree_centrality"), c("Disease_incidence", "Synthetic"),
+           c("Disease_incidence", "Nonsynthetic"), c("Disease_incidence", "Mixture"), c("Mildew_may", "Pruning"),
+           c("Degree_centrality", "Mildew_may"), c("Interval", "First_spray_date"),c("Initial_interval_after_change", "First_spray_date"),
+           c("Synthetic", "Nonsynthetic"), c("Synthetic", "Mixture"),
+           c("Nonsynthetic", "Synthetic"),c("Nonsynthetic", "Mixture"), 
+           c("Mixture", "Synthetic"),c("Mixture", "Nonsynthetic"),
+           c("Degree_centrality", "Initial_interval_after_change"),c("Degree_centrality", "First_spray_date"),c("Degree_centrality", "Interval"),
+           c("First_spray_date", "Degree_centrality"),c("First_spray_date", "Nonsynthetic"),
+           c("Interval", "Disease_incidence"),c("Interval", "Degree_centrality"),
+           c("Initial_interval_after_change", "Mixture"), c("Degree_centrality", "Mixture"), c("Mixture", "Annual_costs"),
+           c("Synthetic", "Initial_interval_after_change"),c("Susceptibility_to_R6_Strains", "Area_R6"),
+           c("Pruning", "Susceptibility_to_R6_Strains"),c("Pruning", "Area_R6"),
+           c("Mildew_may", "Annual_costs"),c("Susceptibility_to_R6_Strains", "Annual_costs"),
+           c("Area_R6", "Annual_costs"))
+
+wl = matrix(c("Disease_incidence", "Annual_costs",
+              "Pruning", "Mildew_may",
+              "Susceptibility_to_R6_Strains", "Mildew_may",
+              "Mildew_may", "Interval",
+              "Mildew_may", "Synthetic",
+              "Mildew_may", "Nonsynthetic",
+              "Mildew_may", "Mixture"),
+            ncol = 2, byrow = TRUE, dimnames = list(NULL, c("from", "to")))
+
+dag = hc(bn, whitelist = wl, blacklist = bl, debug = TRUE)
+
+dag
+
+# strength
+
+str.diff = boot.strength(bn, R = 200, algorithm = "hc",
+                         algorithm.args = list(whitelist = wl, blacklist = bl))
+
+attr(str.diff, "threshold")
+
+avg.diff = averaged.network(str.diff, threshold = 0.51)
+
+
+# Susceptibility_to_R6_Strains = 0
+fitted.raw.simpler = bn.fit(avg.diff, bn)
+
+sim = cpdist(fitted.raw.simpler, nodes = c("Disease_incidence", "Annual_costs"), n = 10^4,  
+             evidence = (Susceptibility_to_R6_Strains < 0.9))
+
+sim$Disease_incidence <- sim$Disease_incidence*sim$Disease_incidence 
+sim$Annual_costs <- sim$Annual_costs*sim$Annual_costs
+
+png("MildewcostsSusceptibility_to_R6_Strains0_R6.png",width=15,height=15,units="cm" , res = 1000)
+ggscatter(sim, x = "Disease_incidence", y = "Annual_costs", add = "reg.line",
+          color = "black", shape = 21, size = 0.5, 
+          add.params = list(color = "blue", fill = "lightgray"),
+          xlab = "Disease incidence",
+          ylab = "Annual costs",) + 
+  font("xlab", size = 20, color = "black")+ font("ylab", size = 20, color = "black")+
+  font("xy.text", size = 20, color = "black", face = "bold")+
+  stat_cor(label.x = 0.5, label.y = 2400, color = "blue") +
+  stat_regline_equation(label.x = 0.5, label.y = 2600, color = "blue") + scale_x_continuous(limits = c(0,1))
+dev.off()
+
+# Susceptibility_to_R6_Strains = 1
+fitted.raw.simpler = bn.fit(avg.diff, bn)
+
+sim = cpdist(fitted.raw.simpler, nodes = c("Disease_incidence", "Annual_costs"), n = 10^4,  
+             evidence = (Susceptibility_to_R6_Strains > 0.7) & (Susceptibility_to_R6_Strains < 1.2))
+
+sim$Disease_incidence <- sim$Disease_incidence*sim$Disease_incidence 
+sim$Annual_costs <- sim$Annual_costs*sim$Annual_costs
+
+png("MildewcostsSusceptibility_to_R6_Strains1_R6.png",width=15,height=15,units="cm" , res = 1000)
+ggscatter(sim, x = "Disease_incidence", y = "Annual_costs", add = "reg.line",
+          color = "black", shape = 21, size = 0.5, 
+          add.params = list(color = "blue", fill = "lightgray"),
+          xlab = "Disease incidence",
+          ylab = "Annual costs",) +
+  font("xlab", size = 20, color = "black")+ font("ylab", size = 20, color = "black")+
+  font("xy.text", size = 20, color = "black", face = "bold")+
+  stat_cor(label.x = 0.5, label.y = 2400, color = "blue") +
+  stat_regline_equation(label.x = 0.5, label.y = 2600, color = "blue") + scale_x_continuous(limits = c(0,1))
+dev.off()
+
+# Susceptibility_to_R6_Strains = 2
+fitted.raw.simpler = bn.fit(avg.diff, bn)
+
+sim = cpdist(fitted.raw.simpler, nodes = c("Disease_incidence", "Annual_costs"), n = 10^4,  
+             evidence = (Susceptibility_to_R6_Strains > 1.3) & (Susceptibility_to_R6_Strains < 1.7))
+
+sim$Disease_incidence <- sim$Disease_incidence*sim$Disease_incidence 
+sim$Annual_costs <- sim$Annual_costs*sim$Annual_costs
+
+png("MildewcostsSusceptibility_to_R6_Strains2_R6.png",width=15,height=15,units="cm" , res = 1000)
+ggscatter(sim, x = "Disease_incidence", y = "Annual_costs", add = "reg.line",
+          color = "black", shape = 21, size = 0.5, 
+          add.params = list(color = "blue", fill = "lightgray"),
+          xlab = "Disease incidence",
+          ylab = "Annual costs",) +
+  font("xlab", size = 20, color = "black")+ font("ylab", size = 20, color = "black")+
+  font("xy.text", size = 20, color = "black", face = "bold")+
+  stat_cor(label.x = 0.5, label.y = 2400, color = "blue") +
+  stat_regline_equation(label.x = 0.5, label.y = 2600, color = "blue") + scale_x_continuous(limits = c(0,1))
+dev.off()
+
+
+# Susceptibility_to_R6_Strains = 3
+fitted.raw.simpler = bn.fit(avg.diff, bn)
+
+sim = cpdist(fitted.raw.simpler, nodes = c("Disease_incidence", "Annual_costs"), n = 10^4,  
+             evidence = (Susceptibility_to_R6_Strains > 1.7) & (Susceptibility_to_R6_Strains < 1.9))
+
+sim$Disease_incidence <- sim$Disease_incidence*sim$Disease_incidence 
+sim$Annual_costs <- sim$Annual_costs*sim$Annual_costs
+
+png("MildewcostsSusceptibility_to_R6_Strains3_R6.png",width=15,height=15,units="cm" , res = 1000)
+ggscatter(sim, x = "Disease_incidence", y = "Annual_costs", add = "reg.line",
+          color = "black", shape = 21, size = 0.5, 
+          add.params = list(color = "blue", fill = "lightgray"),
+          xlab = "Disease incidence",
+          ylab = "Annual costs",) +
+  font("xlab", size = 20, color = "black")+ font("ylab", size = 20, color = "black")+
+  font("xy.text", size = 20, color = "black", face = "bold")+
+  stat_cor(label.x = 0.5, label.y = 2400, color = "blue") +
+  stat_regline_equation(label.x = 0.5, label.y = 2600, color = "blue") + scale_x_continuous(limits = c(0,1))
+dev.off()
+
+
+# Susceptibility_to_R6_Strains = 4
+fitted.raw.simpler = bn.fit(avg.diff, bn)
+
+sim = cpdist(fitted.raw.simpler, nodes = c("Disease_incidence", "Annual_costs"), n = 10^4,  
+             evidence = (Susceptibility_to_R6_Strains > 1.9) & (Susceptibility_to_R6_Strains < 2.1))
+
+sim$Disease_incidence <- sim$Disease_incidence*sim$Disease_incidence 
+sim$Annual_costs <- sim$Annual_costs*sim$Annual_costs
+
+png("MildewcostsSusceptibility_to_R6_Strains4_R6.png",width=15,height=15,units="cm" , res = 1000)
+ggscatter(sim, x = "Disease_incidence", y = "Annual_costs", add = "reg.line",
+          color = "black", shape = 21, size = 0.5, 
+          add.params = list(color = "blue", fill = "lightgray"),
+          xlab = "Disease incidence",
+          ylab = "Annual costs",) +
+  font("xlab", size = 20, color = "black")+ font("ylab", size = 20, color = "black")+
+  font("xy.text", size = 20, color = "black", face = "bold")+
+  stat_cor(label.x = 0.5, label.y = 2400, color = "blue") +
+  stat_regline_equation(label.x = 0.5, label.y = 2600, color = "blue") + scale_x_continuous(limits = c(0,1))
+dev.off()
+
+# Susceptibility_to_R6_Strains = 5
+fitted.raw.simpler = bn.fit(avg.diff, bn)
+
+sim = cpdist(fitted.raw.simpler, nodes = c("Disease_incidence", "Annual_costs"), n = 10^4,  
+             evidence = (Susceptibility_to_R6_Strains > 2.1))
+
+sim$Disease_incidence <- sim$Disease_incidence*sim$Disease_incidence 
+sim$Annual_costs <- sim$Annual_costs*sim$Annual_costs
+
+png("MildewcostsSusceptibility_to_R6_Strains5_R6.png",width=15,height=15,units="cm" , res = 1000)
+ggscatter(sim, x = "Disease_incidence", y = "Annual_costs", add = "reg.line",
+          color = "black", shape = 21, size = 0.5, 
+          add.params = list(color = "blue", fill = "lightgray"),
+          xlab = "Disease incidence",
+          ylab = "Annual costs",) +
+  font("xlab", size = 20, color = "black")+ font("ylab", size = 20, color = "black")+
+  font("xy.text", size = 20, color = "black", face = "bold")+
+  stat_cor(label.x = 0.5, label.y = 2400, color = "blue") +
+  stat_regline_equation(label.x = 0.5, label.y = 2600, color = "blue") + scale_x_continuous(limits = c(0,1))
+dev.off()
+
+
 # Susceptibility to nonR6 Strains
 
-bn <- read.csv("D:/USDA/Project/Variety/data/powdery_mildew_fungicide_record_database_Variety_v9_nonR6.csv", check.names=FALSE)
+bn <- read.csv(".../powdery_mildew_fungicide_record_database_Variety_github_nonR6_v1.csv", check.names=FALSE)
 
 bn$Pruning <- as.numeric(bn$Pruning)
 bn$Susceptibility_to_nonR6_Strains <- as.numeric(bn$Susceptibility_to_nonR6_Strains)
-# bn$Susceptibility_to_non-Susceptibility_to_nonR6_Strains_Strains <- as.numeric(bn$Susceptibility_to_non-Susceptibility_to_nonR6_Strains_Strains)
 bn$First_spray_date <- as.numeric(bn$First_spray_date)
 bn$Interval <- as.numeric(bn$Interval)
 bn$Initial_interval_after_change <- as.numeric(bn$Initial_interval_after_change)
