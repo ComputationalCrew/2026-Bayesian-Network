@@ -1,0 +1,79 @@
+library(bnlearn)
+library(gplots)
+library(ggplot2)
+library(ggpubr)
+library(stargazer)
+library(corrplot)
+
+bn <- read.csv(".../powdery_mildew_fungicide_record_database_Variety_github_nonR6_v1.csv", check.names=FALSE)
+
+bn$Pruning <- as.numeric(bn$Pruning)
+bn$Susceptibility_to_nonR6_Strains <- as.numeric(bn$Susceptibility_to_nonR6_Strains)
+# bn$Susceptibility_to_non-Susceptibility_to_nonR6_Strains_Strains <- as.numeric(bn$Susceptibility_to_non-Susceptibility_to_nonR6_Strains_Strains)
+bn$First_spray_date <- as.numeric(bn$First_spray_date)
+bn$Interval <- as.numeric(bn$Interval)
+bn$Initial_interval_after_change <- as.numeric(bn$Initial_interval_after_change)
+bn$Synthetic <- as.numeric(bn$Synthetic)
+bn$Nonsynthetic <- as.numeric(bn$Nonsynthetic)
+bn$Mixture <- as.numeric(bn$Mixture)
+
+bn$Pruning <- sqrt(bn$Pruning)
+bn$Area_nonR6 <- sqrt(bn$Area_nonR6)
+bn$First_spray_date <- sqrt(bn$First_spray_date)
+bn$Interval <- sqrt(bn$Interval)
+bn$Annual_costs <- sqrt(bn$Annual_costs)
+bn$Mildew_may <- sqrt(bn$Mildew_may)
+bn$Disease_incidence <- sqrt(bn$Disease_incidence)
+bn$Degree_centrality <- sqrt(bn$Degree_centrality)
+bn$Initial_interval_after_change <- sqrt(bn$Initial_interval_after_change)
+bn$Susceptibility_to_nonR6_Strains <- sqrt(bn$Susceptibility_to_nonR6_Strains)
+
+str(bn)
+
+
+# Supplemental Table 1. Blacklists of edges that were not permitted in the Bayesian networks
+# blacklists and whitelists
+
+bl = tiers2blacklist(list("Pruning", "Susceptibility_to_nonR6_Strains", "Area_nonR6", 
+                          c("Mildew_may", "First_spray_date", "Interval", "Initial_interval_after_change",
+                            "Degree_centrality", "Synthetic", 
+                            "Nonsynthetic", "Mixture",  
+                            "Disease_incidence","Annual_costs")))
+
+
+bl = rbind(bl, c("Annual_costs", "Mildew_may"), c("Annual_costs", "First_spray_date"),
+           c("Annual_costs", "Interval"), c("Annual_costs", "Initial_interval_after_change"),
+           c("Annual_costs", "Disease_incidence"), c("Annual_costs", "Degree_centrality"),
+           c("Annual_costs", "Synthetic"), c("Annual_costs", "Nonsynthetic"),
+           c("Annual_costs", "Mixture"),
+           c("Disease_incidence", "Mildew_may"), c("Disease_incidence", "First_spray_date"),
+           c("Disease_incidence", "Interval"), c("Disease_incidence", "Initial_interval_after_change"),
+           c("Disease_incidence", "Degree_centrality"), c("Disease_incidence", "Synthetic"),
+           c("Disease_incidence", "Nonsynthetic"), c("Disease_incidence", "Mixture"), c("Mildew_may", "Pruning"),
+           c("Degree_centrality", "Mildew_may"), c("Interval", "First_spray_date"),c("Initial_interval_after_change", "First_spray_date"),
+           c("Synthetic", "Nonsynthetic"), c("Synthetic", "Mixture"),
+           c("Nonsynthetic", "Synthetic"),c("Nonsynthetic", "Mixture"), 
+           c("Mixture", "Synthetic"),c("Mixture", "Nonsynthetic"),
+           c("Degree_centrality", "Initial_interval_after_change"),c("Degree_centrality", "First_spray_date"),c("Degree_centrality", "Interval"),
+           c("First_spray_date", "Degree_centrality"),c("First_spray_date", "Nonsynthetic"),
+           c("Interval", "Disease_incidence"),c("Interval", "Degree_centrality"),
+           c("Initial_interval_after_change", "Mixture"), c("Degree_centrality", "Mixture"), c("Mixture", "Annual_costs"),
+           c("Synthetic", "Initial_interval_after_change"),c("Susceptibility_to_nonR6_Strains", "Area_nonR6"),
+           c("Pruning", "Susceptibility_to_nonR6_Strains"), c("Pruning", "Area_nonR6"),
+           c("Mildew_may", "Annual_costs"),c("Susceptibility_to_nonR6_Strains", "Annual_costs"),
+           c("Area_nonR6", "Annual_costs"))
+
+# Figure 1. Directed acyclic graph (DAG) including whitelists
+
+wl = matrix(c("Disease_incidence", "Annual_costs",
+              "Pruning", "Mildew_may",
+              "Susceptibility_to_nonR6_Strains", "Mildew_may",
+              "Mildew_may", "Interval",
+              "Mildew_may", "Synthetic",
+              "Mildew_may", "Nonsynthetic",
+              "Mildew_may", "Mixture"),
+               ncol = 2, byrow = TRUE, dimnames = list(NULL, c("from", "to")))
+
+dag = hc(bn, whitelist = wl, blacklist = bl, debug = TRUE)
+
+dag
