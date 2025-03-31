@@ -7,7 +7,7 @@ library(corrplot)
 
 # Susceptibility to R6 Strains
 
-bn <- read.csv("D:/USDA/Project/Variety/data/powdery_mildew_fungicide_record_database_Variety_v9_R6.csv", check.names=FALSE)
+bn <- read.csv(".../powdery_mildew_fungicide_record_database_Variety_github_R6_v1.csv", check.names=FALSE)
 
 bn$Pruning <- as.numeric(bn$Pruning)
 bn$Susceptibility_to_R6_Strains <- as.numeric(bn$Susceptibility_to_R6_Strains)
