@@ -19,7 +19,6 @@ dfplot$Annual_costs <- dfplot$Annual_costs*dfplot$Annual_costs
 
 plot.x <- ggplot(dfplot) + geom_boxplot(aes(x= Group, y = Mildew_incidence, group = Group))
 plot.y <- ggplot(dfplot) + geom_boxplot(aes(x= Group, y = Annual_costs, group = Group))
-
 grid.arrange(plot.x, plot.y, ncol=2) # visual verification of the boxplots
 
 # Step 2. Obtain the calculated boxplot values (including outliers) in 1 data frame:
@@ -30,7 +29,6 @@ colnames(plot.x) <- paste0("x.", gsub("y", "", colnames(plot.x)))
 colnames(plot.y) <- paste0("y.", gsub("y", "", colnames(plot.y)))
 df <- cbind(plot.x, plot.y); rm(plot.x, plot.y)
 df$Group <- sort(unique(dfplot$Group))
-
 df
 
 
@@ -71,7 +69,6 @@ dfplot$Annual_costs <- dfplot$Annual_costs*dfplot$Annual_costs
 
 plot.x <- ggplot(dfplot) + geom_boxplot(aes(x= Group, y = Mildew_incidence, group = Group))
 plot.y <- ggplot(dfplot) + geom_boxplot(aes(x= Group, y = Annual_costs, group = Group))
-
 grid.arrange(plot.x, plot.y, ncol=2) # visual verification of the boxplots
 
 # Step 2. Obtain the calculated boxplot values (including outliers) in 1 data frame:
@@ -82,7 +79,6 @@ colnames(plot.x) <- paste0("x.", gsub("y", "", colnames(plot.x)))
 colnames(plot.y) <- paste0("y.", gsub("y", "", colnames(plot.y)))
 df <- cbind(plot.x, plot.y); rm(plot.x, plot.y)
 df$Group <- sort(unique(dfplot$Group))
-
 df
 
 
