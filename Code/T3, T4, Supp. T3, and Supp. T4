@@ -5,12 +5,173 @@ library(ggpubr)
 library(stargazer)
 library(corrplot)
 
+# Susceptibility to R6 Strains
 
+bn <- read.csv("D:/USDA/Project/Variety/data/powdery_mildew_fungicide_record_database_Variety_v9_R6.csv", check.names=FALSE)
+
+bn$Pruning <- as.numeric(bn$Pruning)
+bn$Susceptibility_to_R6_Strains <- as.numeric(bn$Susceptibility_to_R6_Strains)
+# bn$Susceptibility_to_non-Susceptibility_to_R6_Strains_Strains <- as.numeric(bn$Susceptibility_to_non-Susceptibility_to_R6_Strains_Strains)
+bn$First_spray_date <- as.numeric(bn$First_spray_date)
+bn$Interval <- as.numeric(bn$Interval)
+bn$Initial_interval_after_change <- as.numeric(bn$Initial_interval_after_change)
+bn$Synthetic <- as.numeric(bn$Synthetic)
+bn$Nonsynthetic <- as.numeric(bn$Nonsynthetic)
+bn$Mixture <- as.numeric(bn$Mixture)
+
+bn$Pruning <- sqrt(bn$Pruning)
+bn$Area_R6 <- sqrt(bn$Area_R6)
+bn$First_spray_date <- sqrt(bn$First_spray_date)
+bn$Interval <- sqrt(bn$Interval)
+bn$Annual_costs <- sqrt(bn$Annual_costs)
+bn$Mildew_may <- sqrt(bn$Mildew_may)
+bn$Disease_incidence <- sqrt(bn$Disease_incidence)
+bn$Degree_centrality <- sqrt(bn$Degree_centrality)
+bn$Initial_interval_after_change <- sqrt(bn$Initial_interval_after_change)
+bn$Susceptibility_to_R6_Strains <- sqrt(bn$Susceptibility_to_R6_Strains)
+
+str(bn)
+
+
+# blacklists and whitelists
+bl = tiers2blacklist(list("Pruning", "Susceptibility_to_R6_Strains", "Area_R6", 
+                          c("Mildew_may", "First_spray_date", "Interval", "Initial_interval_after_change",
+                            "Degree_centrality", "Synthetic", 
+                            "Nonsynthetic", "Mixture",  
+                            "Disease_incidence","Annual_costs")))
+
+# "Susceptibility_to_non-Susceptibility_to_R6_Strains_Strains", "rSusceptibility_to_non-Susceptibility_to_R6_Strains_Strains", 
+
+bl = rbind(bl, c("Annual_costs", "Mildew_may"), c("Annual_costs", "First_spray_date"),
+           c("Annual_costs", "Interval"), c("Annual_costs", "Initial_interval_after_change"),
+           c("Annual_costs", "Disease_incidence"), c("Annual_costs", "Degree_centrality"),
+           c("Annual_costs", "Synthetic"), c("Annual_costs", "Nonsynthetic"),
+           c("Annual_costs", "Mixture"),
+           c("Disease_incidence", "Mildew_may"), c("Disease_incidence", "First_spray_date"),
+           c("Disease_incidence", "Interval"), c("Disease_incidence", "Initial_interval_after_change"),
+           c("Disease_incidence", "Degree_centrality"), c("Disease_incidence", "Synthetic"),
+           c("Disease_incidence", "Nonsynthetic"), c("Disease_incidence", "Mixture"), c("Mildew_may", "Pruning"),
+           c("Degree_centrality", "Mildew_may"), c("Interval", "First_spray_date"),c("Initial_interval_after_change", "First_spray_date"),
+           c("Synthetic", "Nonsynthetic"), c("Synthetic", "Mixture"),
+           c("Nonsynthetic", "Synthetic"),c("Nonsynthetic", "Mixture"), 
+           c("Mixture", "Synthetic"),c("Mixture", "Nonsynthetic"),
+           c("Degree_centrality", "Initial_interval_after_change"),c("Degree_centrality", "First_spray_date"),c("Degree_centrality", "Interval"),
+           c("First_spray_date", "Degree_centrality"),c("First_spray_date", "Nonsynthetic"),
+           c("Interval", "Disease_incidence"),c("Interval", "Degree_centrality"),
+           c("Initial_interval_after_change", "Mixture"), c("Degree_centrality", "Mixture"), c("Mixture", "Annual_costs"),
+           c("Synthetic", "Initial_interval_after_change"),c("Susceptibility_to_R6_Strains", "Area_R6"),
+           c("Pruning", "Susceptibility_to_R6_Strains"),c("Pruning", "Area_R6"),
+           c("Mildew_may", "Annual_costs"),c("Susceptibility_to_R6_Strains", "Annual_costs"),
+           c("Area_R6", "Annual_costs"))
+
+wl = matrix(c("Disease_incidence", "Annual_costs",
+              "Pruning", "Mildew_may",
+              "Susceptibility_to_R6_Strains", "Mildew_may",
+              "Mildew_may", "Interval",
+              "Mildew_may", "Synthetic",
+              "Mildew_may", "Nonsynthetic",
+              "Mildew_may", "Mixture"),
+            ncol = 2, byrow = TRUE, dimnames = list(NULL, c("from", "to")))
+
+dag = hc(bn, whitelist = wl, blacklist = bl, debug = TRUE)
+
+dag
+
+# strength
+
+str.diff = boot.strength(bn, R = 200, algorithm = "hc",
+                         algorithm.args = list(whitelist = wl, blacklist = bl))
+
+attr(str.diff, "threshold")
+
+avg.diff = averaged.network(str.diff, threshold = 0.51)
+
+
+fit = bn.fit(avg.diff, bn)
+fit
+
+
+# Conditional independence test
+
+ci.test(y ="Mildew_may", x ="Pruning",  z = "Susceptibility_to_R6_Strains", data = bn, test = "cor")
+ci.test(y ="Mildew_may", x ="Susceptibility_to_R6_Strains",  z = "Pruning", data = bn, test = "cor")
+
+ci.test(y ="First_spray_date", x ="Pruning", data = bn, test = "cor")
+
+
+ci.test(y ="Interval", x ="Mildew_may",  z = c("First_spray_date", "Initial_interval_after_change","Synthetic","Nonsynthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Interval", x ="First_spray_date",  z = c("Mildew_may", "Initial_interval_after_change","Synthetic","Nonsynthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Interval", x ="Initial_interval_after_change",  z = c("Mildew_may", "First_spray_date","Synthetic","Nonsynthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Interval", x ="Synthetic",  z = c("Mildew_may", "First_spray_date","Initial_interval_after_change","Nonsynthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Interval", x ="Nonsynthetic",  z = c("Mildew_may", "First_spray_date","Initial_interval_after_change","Synthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Interval", x ="Mixture",  z = c("Mildew_may", "First_spray_date","Initial_interval_after_change","Synthetic","Nonsynthetic"), data = bn, test = "cor")
+
+
+ci.test(y ="Degree_centrality", x ="Mildew_may", 
+        z = c("Synthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Degree_centrality", x ="Synthetic", 
+        z = c("Mildew_may","Mixture"),  data = bn, test = "cor")
+ci.test(y ="Degree_centrality", x ="Mixture", 
+        z = c("Mildew_may","Synthetic"), data = bn, test = "cor")
+
+
+ci.test(y ="Synthetic", x ="Pruning",  z = c("Susceptibility_to_R6_Strains","Mildew_may","First_spray_date","Initial_interval_after_change"), data = bn, test = "cor")
+ci.test(y ="Synthetic", x ="Susceptibility_to_R6_Strains",  z = c("Pruning", "Mildew_may","First_spray_date","Initial_interval_after_change"), data = bn, test = "cor")
+ci.test(y ="Synthetic", x ="Mildew_may",  z = c("Pruning", "Susceptibility_to_R6_Strains","First_spray_date","Initial_interval_after_change"), data = bn, test = "cor")
+ci.test(y ="Synthetic", x ="First_spray_date",  z = c("Pruning", "Susceptibility_to_R6_Strains","Mildew_may","Initial_interval_after_change"), data = bn, test = "cor")
+ci.test(y ="Synthetic", x ="Initial_interval_after_change",  z = c("Pruning", "Susceptibility_to_R6_Strains","Mildew_may","First_spray_date"), data = bn, test = "cor")
+
+
+ci.test(y ="Nonsynthetic", x ="Pruning",  z = c("Mildew_may", "Initial_interval_after_change","Degree_centrality"), data = bn, test = "cor")
+ci.test(y ="Nonsynthetic", x ="Mildew_may",  z = c("Pruning","Initial_interval_after_change","Degree_centrality"), data = bn, test = "cor")
+ci.test(y ="Nonsynthetic", x ="Initial_interval_after_change",  z = c("Pruning","Mildew_may", "Degree_centrality"), data = bn, test = "cor")
+ci.test(y ="Nonsynthetic", x ="Degree_centrality",  z = c("Pruning","Mildew_may", "Initial_interval_after_change"), data = bn, test = "cor")
+
+
+ci.test(y ="Mixture", x ="Susceptibility_to_R6_Strains", z = c("Area_R6","Mildew_may"), data = bn, test = "cor")
+ci.test(y ="Mixture", x ="Area_R6",  z = c("Susceptibility_to_R6_Strains","Mildew_may"), data = bn, test = "cor")
+ci.test(y ="Mixture", x ="Mildew_may",  z = c("Area_R6","Susceptibility_to_R6_Strains"), data = bn, test = "cor")
+
+
+ci.test(y ="Disease_incidence", x ="Susceptibility_to_R6_Strains", 
+        z = c("Mildew_may","Initial_interval_after_change",
+              "Degree_centrality","Nonsynthetic","Mixture"), data = bn, test = "cor")
+
+ci.test(y ="Disease_incidence", x ="Mildew_may",  z = c("Susceptibility_to_R6_Strains", "Initial_interval_after_change",
+                                              "Degree_centrality","Nonsynthetic","Mixture"), data = bn, test = "cor")
+
+ci.test(y ="Disease_incidence", x ="Initial_interval_after_change",  z = c("Susceptibility_to_R6_Strains", "Mildew_may",
+                                                                 "Degree_centrality","Nonsynthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Disease_incidence", x ="Degree_centrality",  z = c("Susceptibility_to_R6_Strains", "Mildew_may","Initial_interval_after_change",
+                                                     "Nonsynthetic","Mixture"), data = bn, test = "cor")
+ci.test(y ="Disease_incidence", x ="Nonsynthetic",  z = c("Susceptibility_to_R6_Strains", "Mildew_may","Initial_interval_after_change",
+                                                "Degree_centrality","Mixture"), data = bn, test = "cor")
+ci.test(y ="Disease_incidence", x ="Mixture",  z = c("Susceptibility_to_R6_Strains", "Mildew_may","Initial_interval_after_change",
+                                           "Degree_centrality","Nonsynthetic"), data = bn, test = "cor")
+
+
+ci.test(y ="Annual_costs", x ="Interval", 
+        z = c("Disease_incidence",
+              "Degree_centrality", "Synthetic", "Nonsynthetic"), data = bn, test = "cor")
+ci.test(y ="Annual_costs", x ="Degree_centrality",  
+        z = c("Interval", "Disease_incidence",
+              "Synthetic", "Nonsynthetic"), data = bn, test = "cor")
+ci.test(y ="Annual_costs", x ="Synthetic",  
+        z = c("Interval", "Disease_incidence",
+              "Degree_centrality", "Nonsynthetic"), data = bn, test = "cor")
+ci.test(y ="Annual_costs", x ="Nonsynthetic", 
+        z = c("Interval", "Disease_incidence",
+              "Degree_centrality", "Synthetic"), data = bn, test = "cor")
+ci.test(y ="Annual_costs", x ="Disease_incidence",
+        z = c("Interval", 
+              "Degree_centrality", "Synthetic", "Nonsynthetic"), data = bn, test = "cor")
+
+
+# Susceptibility to nonR6 Strains
 bn <- read.csv(".../powdery_mildew_fungicide_record_database_Variety_github_nonR6_v1.csv", check.names=FALSE)
 
 bn$Pruning <- as.numeric(bn$Pruning)
 bn$Susceptibility_to_nonR6_Strains <- as.numeric(bn$Susceptibility_to_nonR6_Strains)
-# bn$Susceptibility_to_non-Susceptibility_to_nonR6_Strains_Strains <- as.numeric(bn$Susceptibility_to_non-Susceptibility_to_nonR6_Strains_Strains)
 bn$First_spray_date <- as.numeric(bn$First_spray_date)
 bn$Interval <- as.numeric(bn$Interval)
 bn$Initial_interval_after_change <- as.numeric(bn$Initial_interval_after_change)
