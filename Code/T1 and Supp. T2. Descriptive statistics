@@ -16,10 +16,7 @@ str(bn)
 stargazer(bn, type = "text", title="Descriptive statistics", digits=2, out="table1.txt")
 
 # Supplemental Table 2. Mean and standard of covariates by hop cultivar susceptibility to two strains of Podosphaera macularis
-
-
 table(bn[, c("Susceptibility_to_nonR6_Strains", "Group")])
-
 table(bn[, c("Susceptibility_to_nonR6_Strains", "Group")])
 
 
