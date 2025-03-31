@@ -30,24 +30,6 @@ bn$Susceptibility_to_R6_Strains <- sqrt(bn$Susceptibility_to_R6_Strains)
 
 str(bn)
 
-# Normal distribution
-
-png("normaldist_R6_sqrt.png",width=20,height=16,units="cm" , res = 1000)
-par(mfrow = c(4, 3), mar = c(4, 2, 2, 2))
-for (var in c("First_spray_date", "Interval",
-              "Initial_interval_after_change", "Degree_centrality",
-              "Annual_costs","Mildew_may", "Disease_incidence", 
-              "Synthetic","Nonsynthetic","Mixture")) {
-  
-  x = bn[, var]
-  hist(x, prob = TRUE, xlab = var, ylab = "", main = "", col = "ivory")
-  lines(density(x), lwd = 2, col = "tomato")
-  curve(dnorm(x, mean = mean(x), sd = sd(x)), from = min(x), to = max(x),
-        add = TRUE, lwd = 2, col = "steelblue")
-  
-}
-dev.off()
-
 # blacklists and whitelists
 bl = tiers2blacklist(list("Pruning", "Susceptibility_to_R6_Strains", "Area_R6", 
                           c("Mildew_may", "First_spray_date", "Interval", "Initial_interval_after_change",
