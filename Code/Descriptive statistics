@@ -1,0 +1,82 @@
+library(bnlearn)
+library(gplots)
+library(ggplot2)
+library(ggpubr)
+library(stargazer)
+library(corrplot)
+
+
+# entire dataset
+
+bn <- read.csv(".../powdery_mildew_fungicide_record_database_github_v1.csv", check.names=FALSE)
+
+str(bn)
+
+# Table 1. Descriptive Statistics
+stargazer(bn, type = "text", title="Descriptive statistics", digits=2, out="table1.txt")
+
+# Supplemental Table 2. Mean and standard of covariates by hop cultivar susceptibility to two strains of Podosphaera macularis
+
+
+table(bn[, c("Susceptibility_to_nonR6_Strains", "Group")])
+
+table(bn[, c("Susceptibility_to_nonR6_Strains", "Group")])
+
+
+library(dplyr)
+bn$Susceptibility_to_nonR6_Strains <- as.factor(bn$Susceptibility_to_nonR6_Strains)
+
+table1 <- bn %>% group_by(Susceptibility_to_nonR6_Strains) %>%
+  summarize(Pruning_mean = mean(Pruning), Pruning_sd = sd(Pruning),
+            Area_R6_mean = mean(Area_R6), Area_R6_sd = sd(Area_R6),
+            Mildew_may_mean = mean(Mildew_may), Mildew_may_sd = sd(Mildew_may),
+            First_spray_date_mean = mean(First_spray_date), First_spray_date_sd = sd(First_spray_date),
+            Interval_mean = mean(Interval), Interval_sd = sd(Interval),
+            Disease_incidence_mean = mean(Disease_incidence), Disease_incidence_sd = sd(Disease_incidence),
+            Nonsynthetic_mean = mean(Nonsynthetic), Nonsynthetic_sd = sd(Nonsynthetic),
+            Annual_costs_mean = mean(Annual_costs), Annual_costs_sd = sd(Annual_costs))
+
+write.csv(table1, "table1.csv")
+
+with(bn, aggregate(Disease_incidence ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Disease_incidence ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+with(bn, aggregate(Initial_interval_after_change ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Initial_interval_after_change ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+with(bn, aggregate(Degree_centrality ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Degree_centrality ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+with(bn, aggregate(Synthetic ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Synthetic ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+
+bn$Susceptibility_to_nonR6_Strains <- as.factor(bn$Susceptibility_to_nonR6_Strains)
+
+table2 <- bn %>% group_by(Susceptibility_to_nonR6_Strains) %>%
+  summarize(Pruning_mean = mean(Pruning), Pruning_sd = sd(Pruning),
+            Area_nonR6_mean = mean(Area_nonR6), Area_nonR6_sd = sd(Area_nonR6),
+            Mildew_may_mean = mean(Mildew_may), Mildew_may_sd = sd(Mildew_may),
+            First_spray_date_mean = mean(First_spray_date), First_spray_date_sd = sd(First_spray_date),
+            Interval_mean = mean(Interval), Interval_sd = sd(Interval),
+            Nonsynthetic_mean = mean(Nonsynthetic), Nonsynthetic_sd = sd(Nonsynthetic),
+            Disease_incidence_mean = mean(Disease_incidence), Disease_incidence_sd = sd(Disease_incidence),
+            Annual_costs_mean = mean(Annual_costs), Annual_costs_sd = sd(Annual_costs))
+
+write.csv(table2, "table2.csv")
+
+with(bn, aggregate(Disease_incidence ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Disease_incidence ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+with(bn, aggregate(Initial_interval_after_change ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Initial_interval_after_change ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+with(bn, aggregate(Degree_centrality ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Degree_centrality ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+with(bn, aggregate(Synthetic ~ Susceptibility_to_nonR6_Strains, FUN = mean))
+with(bn, aggregate(Synthetic ~ Susceptibility_to_nonR6_Strains, FUN = sd))
+
+
+bn %>% group_by(Susceptibility_to_nonR6_Strains) %>%
+  summarize(Area_nonR6_mean = mean(Area_nonR6), Area_nonR6_sd = sd(Area_nonR6))
+
+group_mean<- aggregate(x= bn$Disease_incidence,
+                       # Specify group indicator
+                       by = list(bn$Susceptibility_to_nonR6_Strains),      
+                       # Specify function (i.e. mean)
+                       FUN = mean)
+print(group_mean)
